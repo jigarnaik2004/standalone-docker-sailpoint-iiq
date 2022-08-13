@@ -1,3 +1,78 @@
+# Updates as of 08/13/2022.
+
+For making the UberEther/standalone-docker-sailpoint-iiq repo to work, I required to perform few minor changes in docker files and required to perform series of commands to set it up on AWs EC2.
+
+Note: If you are trying to setup SailPoint containers on EC2 with the repo, use EC2 instance type Medium or higher. 
+
+Steps to follow:
+
+* Spin up EC2 Ubuntu 20.0 instance (Medium or higher), configure SSH key and connect the instance through your preferred method
+* Download identityiq-8.1.zip, identityiq-8.1p3.jar,ssb-v7.zip from the sailpoint compass community portal as suggested in the description from UberEther.
+* Copy these files to your instance \home directory (use SCP or SMBClient). (You may not able to copy them directly to the suggested folders in your Ubuntu instance, hence you may need to copy them to \home directory first and then copy to the suggested folders) 
+* Install docker (https://docs.docker.com/engine/install/ubuntu/) 
+  ```
+     sudo apt-get update
+     sudo apt-get install ca-certificates curl gnupg lsb-release
+     sudo mkdir -p /etc/apt/keyrings
+     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+     echo \
+     "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+     $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+     
+     sudo apt-get update
+     sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+    ```
+   * Install other requisites  
+   ```
+     apt install docker-compose git unzip openjdk-8-jdk  git-lfs -y
+   ```
+   * Clone the repo   
+   ```
+     cd /opt
+     sudo git clone https://github.com/jigarnaik2004/standalone-docker-sailpoint-iiq.git
+   ```
+   * Copy files from /home to designated directories 
+   ```
+    cd standalone-docker-sailpoint-iiq
+    cp /home/ubuntu/identityiq-8.1.zip /opt/standalone-docker-sailpoint-iiq/ssb/components/iiq8.1/base/ga/
+    cp /home/ubuntu/identityiq-8.1p3.jar /opt/standalone-docker-sailpoint-iiq/ssb/components/iiq8.1/base/patch/
+    cp /home/ubuntu/ssb-v7.zip /opt/standalone-docker-sailpoint-iiq/ssb/components/ssb-v7/    
+    ```
+   * Test the build (look for SUCCESSFUL message at the end)
+   ```
+   cd ssb
+   sudo ./build.sh   
+   ```
+   * Boostrap the deployment (takes around 4-5 mins. Wait for the successful message at the end)
+   ```
+   cd ../uedocker
+   sudo sed -i 's/^DB_CONTAINER_NAME.*/DB_CONTAINER_NAME=$(docker-compose ps -q db)/g' create.sh
+   sudo sed -i 's/^APP_CONTAINER_NAME.*/APP_CONTAINER_NAME=$(docker-compose ps -q app)/g' create.sh
+   chown -R 1000:1000 volumes
+   sudo ./bootstrap.sh
+   ```
+   * Verify the containers 
+   ```
+   sudo docker ps 
+   ```
+   <img width="748" alt="image" src="https://user-images.githubusercontent.com/16581305/184506596-d345d0b1-e22d-477d-89c3-cc3a0ee9b83b.png">
+
+   * Try the web url for SailPoint on Ubuntu
+   ```
+   curl --insecure https://localhost/ue/login.jsf
+   ```
+   * Configure the inbound security rule for the EC2 instance
+   <img width="443" alt="image" src="https://user-images.githubusercontent.com/16581305/184506651-34fbec82-a5f7-46b2-8501-b7bb0ce35994.png">
+
+   *  Try browsing on the internet
+    https://<public ip of your EC2>/ue/login.jsf
+  
+
+
+
+
+
+
 SailPoint IdentityIQ Dockerized v2
 ==================================
 
