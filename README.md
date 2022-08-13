@@ -65,7 +65,7 @@ Steps to follow:
    <img width="443" alt="image" src="https://user-images.githubusercontent.com/16581305/184506651-34fbec82-a5f7-46b2-8501-b7bb0ce35994.png">
 
    *  Try browsing on the internet
-    https://<public ip of your EC2>/ue/login.jsf
+    https://PublicIP-of-EC2/ue/login.jsf
   
 
 
